@@ -18,18 +18,18 @@ import (
 )
 
 const (
-	version = "0.8.1"
+	version = "0.8.2"
 )
 
 var (
 	cmd           string
 	desc          []string
-	proj          string
+	proj          string = ""
 	projPassed    bool   = false
 	priority      uint64 = 0
 	id            uint64
-	tagsAdd       []string
-	tagsRemove    []string
+	tagsAdd       []string     = []string{}
+	tagsRemove    []string     = []string{}
 	dueDate       sql.NullTime = sql.NullTime{}
 	dueDatePassed bool         = false
 
