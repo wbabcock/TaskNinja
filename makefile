@@ -16,7 +16,7 @@ clean:
 	rm -f bin/*
 
 install: clean default
-	sudo cp ./bin/taskninja_macos-aarch64 /usr/local/bin/taskninja
+	sudo cp ./bin/$(APP_NAME)_macos-aarch64 /usr/local/bin/$(APP_NAME)
 
 build-win: clean default
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o $(WIN_TARGET) ./src
