@@ -2,6 +2,10 @@ package main
 
 import "database/sql"
 
+const (
+	version = "0.9.0"
+)
+
 var (
 	cmd            string
 	desc           string
@@ -29,13 +33,6 @@ var (
 		"version",
 		"purge",
 		"shell",
-	}
-
-	formats = []string{
-		"2006-01-02", // "2023-01-23"
-		"2006/01/02", // "2023/01/23"
-		"02/01/2006", // "23/01/2023"
-		"01/02/2006", // "01/23/2023"
 	}
 
 	tableHeader = []string{"ID", "Project", "Task", "Priority", "Created", "Due", "Done", "Tags"}

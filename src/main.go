@@ -15,10 +15,6 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-const (
-	version = "0.9.0"
-)
-
 func init() {
 	// default location for the database
 	homeDir, _ := os.UserHomeDir()

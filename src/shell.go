@@ -16,6 +16,7 @@ import (
 
 var (
 	// these are only applicable here
+	app   *tview.Application
 	table *tview.Table
 
 	txtID          = tview.NewInputField().SetLabel("ID: ")
@@ -36,8 +37,19 @@ var (
 	colorMain  = tview.Styles.PrimaryTextColor
 	colorDue   = tview.Styles.PrimaryTextColor
 
+	message = tview.NewTextView()
+
 	tasks []db.Task
 )
+
+func msgbox(msg string) {
+	go func() {
+		message.SetText(msg)
+		time.Sleep(3 * time.Second)
+		message.SetText("")
+		app.Draw()
+	}()
+}
 
 func loadTasks() error {
 	var err error
@@ -65,7 +77,6 @@ func initFormControls() {
 }
 
 func loadTable() {
-
 	if len(tasks) == 0 {
 		table.SetCell(0, 0,
 			tview.NewTableCell("There are not tasks to show").
@@ -179,7 +190,7 @@ func loadFormDetails(table *tview.Table) {
 }
 
 func loadShell() {
-	app := tview.NewApplication()
+	app = tview.NewApplication()
 
 	// load tasks
 	err := loadTasks()
@@ -221,7 +232,8 @@ func loadShell() {
 				dueDate = sql.NullTime{}
 			} else {
 				parsedDate, err := parseDate(txtDue.GetText())
-				if err != nil {
+				if  err != nil {
+					msgbox("ERROR: " + err.Error())
 					dueDatePassed = false
 				}
 				dueDatePassed = true
@@ -237,6 +249,7 @@ func loadShell() {
 			} else {
 				parsedDate, err := parseDate(txtDone.GetText())
 				if err != nil {
+					msgbox("ERROR: " + err.Error())
 					doneDatePassed = false
 				}
 				doneDatePassed = true
@@ -255,7 +268,6 @@ func loadShell() {
 			refreshForm()
 			refreshTable()
 			app.SetFocus(table)
-
 		}).
 		AddButton("Clear", func() {
 			refreshForm()
@@ -263,6 +275,7 @@ func loadShell() {
 		AddButton("Complete", func() {
 			idStr := txtID.GetText()
 			if idStr == "" {
+				msgbox("ERROR: You must select a task to complete")
 				return
 			}
 			id, _ := strconv.ParseUint(idStr, 10, 64)
@@ -319,9 +332,15 @@ func loadShell() {
 	// Key menu at the bottom
 	keyMenu := tview.NewTextView().
 		SetText("ESC: Quit | ENTER: Select | TAB: Next | CTRL+N: Change Pane").
-		SetTextAlign(tview.AlignLeft).
+		SetTextAlign(tview.AlignCenter).
 		SetDynamicColors(true).
 		SetTextColor(tview.Styles.SecondaryTextColor)
+
+	message = tview.NewTextView().
+		SetText("").
+		SetTextAlign(tview.AlignLeft).
+		SetDynamicColors(true).
+		SetTextColor(tcell.ColorRed)
 
 	// Layout
 	flex := tview.NewFlex().
@@ -330,6 +349,7 @@ func loadShell() {
 		AddItem(tview.NewFlex().
 			AddItem(table, 0, 2, true).
 			AddItem(form, 0, 1, false), 0, 2, true).
+		AddItem(message, 1, 0, false).
 		AddItem(keyMenu, 1, 0, false)
 
 	// Keybindings
@@ -347,6 +367,7 @@ func loadShell() {
 
 		if event.Key() == tcell.KeyEsc {
 			// Exit the application on Escape
+			db.Disconnect_database()
 			app.Stop()
 			return nil
 		}

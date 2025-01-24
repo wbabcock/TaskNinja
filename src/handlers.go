@@ -101,12 +101,15 @@ func completeTask(taskId uint64) (db.Task, error) {
 }
 
 func parseDate(input string) (time.Time, error) {
-	var err error
-	for _, format := range formats {
-		parsedDate, err := time.Parse(format, input)
-		if err == nil {
-			return parsedDate, nil
-		}
+	format, err := utils.GetLocaleDateFormat()
+	if err != nil {
+		return time.Now(), err
 	}
-	return time.Now(), err
+
+	parsedDate, err := time.Parse(format, input)
+	if err != nil {
+		return time.Now(), err
+	}
+
+	return parsedDate, err
 }
