@@ -18,7 +18,6 @@ type Task struct {
 }
 
 func ListTasks(tags []string) ([]Task, error) {
-
 	var tagFilter string
 	if len(tags) > 0 {
 		tagFilter = " where "
@@ -116,7 +115,18 @@ func (t *Task) Update() error {
 }
 
 func DeleteTaskById(id uint64) error {
-	stmt, err := db.Prepare(`
+	stmt, err := db.Prepare(`delete from tags where task_id = ?;`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(id)
+	if err != nil {
+		return err
+	}
+
+	stmt, err = db.Prepare(`
 		delete from tasks where id = ?;
 	`)
 	if err != nil {

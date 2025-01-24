@@ -65,12 +65,19 @@ func initFormControls() {
 }
 
 func loadTable() {
-	// setup the header
-	for i, col := range tableHeader {
-		table.SetCell(0, i,
-			tview.NewTableCell(col).
-				SetTextColor(tview.Styles.SecondaryTextColor).
-				SetSelectable(false))
+
+	if len(tasks) == 0 {
+		table.SetCell(0, 0,
+			tview.NewTableCell("There are not tasks to show").
+				SetTextColor(colorMain))
+	} else {
+		// setup the header
+		for i, col := range tableHeader {
+			table.SetCell(0, i,
+				tview.NewTableCell(col).
+					SetTextColor(tview.Styles.SecondaryTextColor).
+					SetSelectable(false))
+		}
 	}
 
 	// table content
