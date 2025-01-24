@@ -2,10 +2,8 @@ package main
 
 import (
 	"cmp"
-	"database/sql"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -18,34 +16,7 @@ import (
 )
 
 const (
-	version = "0.8.2"
-)
-
-var (
-	cmd           string
-	desc          []string
-	proj          string = ""
-	projPassed    bool   = false
-	priority      uint64 = 0
-	id            uint64
-	tagsAdd       []string     = []string{}
-	tagsRemove    []string     = []string{}
-	dueDate       sql.NullTime = sql.NullTime{}
-	dueDatePassed bool         = false
-
-	verbs = []string{
-		"add",
-		"complete",
-		"delete",
-		"done",
-		"list",
-		"modify",
-		"remove",
-		"show",
-		"update",
-		"version",
-		"purge",
-	}
+	version = "0.9.0"
 )
 
 func init() {
@@ -76,30 +47,7 @@ func main() {
 	case "version":
 		fmt.Printf("taskninja version %s\n", version)
 	case "add":
-		if priority == 0 {
-			priority = 2 // default value
-		}
-		task := db.Task{
-			Description: strings.Join(desc, " "),
-			Project:     utils.ToNullString(proj),
-			Priority:    priority,
-			DueDTM:      dueDate,
-			CreatedDTM:  time.Now(),
-		}
-		task.Save()
-
-		// Manage Tags
-		for _, v := range tagsAdd {
-			tag := db.Tag{
-				TaskId: task.Id,
-				Name:   v,
-			}
-			tag.Save()
-		}
-
-		for _, v := range tagsRemove {
-			db.DeleteTagByName(uint64(task.Id), v)
-		}
+		createTask()
 	case "modify":
 		task, err := db.GetTaskById(id)
 		if err != nil {
@@ -112,7 +60,7 @@ func main() {
 			task.DueDTM = dueDate
 		}
 
-		task.Description = cmp.Or(strings.Join(desc, " "), task.Description)
+		task.Description = cmp.Or(desc, task.Description)
 
 		if projPassed {
 			task.Project = utils.ToNullString(proj)
@@ -122,31 +70,12 @@ func main() {
 			task.Priority = priority
 		}
 		task.Update()
-
-		// Manage Tags
-		for _, v := range tagsAdd {
-			tag := db.Tag{
-				TaskId: task.Id,
-				Name:   v,
-			}
-			tag.Save()
-		}
-
-		for _, v := range tagsRemove {
-			db.DeleteTagByName(uint64(task.Id), v)
-		}
 	case "complete", "done":
-		task, err := db.GetTaskById(id)
+		_, err := completeTask(id)
 		if err != nil {
-			fmt.Println(err)
 			db.Disconnect_database()
 			os.Exit(1)
 		}
-		task.CompletedDTM = sql.NullTime{
-			Time:  time.Now(),
-			Valid: true,
-		}
-		task.Update()
 	case "purge":
 		err := db.PurgeCompletedTasks()
 		if err != nil {
@@ -167,6 +96,8 @@ func main() {
 		c.Printf("Task %d has been remove\n", id)
 	case "list", "show":
 		listTasks()
+	case "shell":
+		loadShell()
 	}
 
 	// Disconnect db
@@ -188,16 +119,13 @@ func listTasks() {
 	}
 	fmt.Println()
 	tbl := tablewriter.NewWriter(os.Stdout)
-	tbl.SetHeader([]string{"ID", "Project", "Task", "Priority", "Created", "Due", "Done", "Tags"})
+	tbl.SetHeader(tableHeader)
 	tbl.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
-	//tbl.SetHeaderLine(false)
-	//tbl.SetBorder(false)
 	tbl.SetColumnSeparator("|")
 	tbl.SetCenterSeparator("+")
 	tbl.SetRowSeparator("-")
 	tbl.SetAutoWrapText(false)
 	tbl.SetTablePadding("\t")
-	//tbl.SetNoWhiteSpace(true)
 	tbl.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 
 	for _, t := range tasks {
@@ -208,18 +136,6 @@ func listTasks() {
 		comp := t.CompletedDTM.Time.Format("01/02/2006")
 		if !t.CompletedDTM.Valid {
 			comp = ""
-		}
-
-		p := ""
-		switch t.Priority {
-		case 1:
-			p = "L"
-		case 2:
-			p = ""
-		case 3:
-			p = "M"
-		case 4:
-			p = "H"
 		}
 
 		red := color.New(color.FgRed).SprintFunc()
@@ -239,7 +155,7 @@ func listTasks() {
 			fmt.Sprintf("%d", t.Id),
 			t.Project.String,
 			t.Description,
-			p,
+			getPriorityValue(t.Priority),
 			t.CreatedDTM.Format("01/02/2006"),
 			due,
 			comp,

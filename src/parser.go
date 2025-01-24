@@ -11,8 +11,11 @@ import (
 )
 
 func parseInput(args []string) {
-	// if only 2 args passed handle them (e.g. taskninja 1 done, taskninja done 1)
-	if len(args) == 2 && args[0][:1] != "+" && args[1][:1] != "+" {
+
+	if len(args) == 0 {
+		cmd = "shell"
+	} else if len(args) == 2 && args[0][:1] != "+" && args[1][:1] != "+" {
+		// if only 2 args passed handle them (e.g. taskninja 1 done, taskninja done 1)
 		if utils.IsNumeric(args[0]) {
 			cmd = args[1]
 			id, _ = strconv.ParseUint(args[0], 10, 64)
@@ -68,7 +71,11 @@ func parseInput(args []string) {
 					}
 				} else {
 					// everything else is the task description
-					desc = append(desc, v)
+					if len(desc) > 0 {
+						desc = strings.Join([]string{desc, v}, " ")
+					} else {
+						desc = v
+					}
 				}
 			}
 		}

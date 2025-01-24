@@ -33,8 +33,7 @@ func ListTasks(tags []string) ([]Task, error) {
 	stmt, err := db.Prepare(fmt.Sprintf(`
 		select tasks.id, project, description, priority, created_dtm, due_dtm, completed_dtm, coalesce(tags_view.tags, '') as tags 
 		from tasks left join tags_view on tasks.id = tags_view.task_id
-		%s  
-		order by due_dtm desc, priority desc;
+		%s order by coalesce(completed_dtm, '1900-01-01') asc, coalesce(due_dtm, '2050-01-01') asc, priority desc, tasks.id asc;
 	`, tagFilter))
 	if err != nil {
 		return nil, err
