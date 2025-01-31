@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/wbabcock/TaskNinja/src/internals/priority"
 	"github.com/wbabcock/TaskNinja/src/utils"
 )
 
@@ -59,16 +60,7 @@ func parseInput(args []string) {
 					dueDate = parseDueDate(v[4:])
 				} else if len(v) >= 9 && v[:9] == "priority:" {
 					// Set priority
-					switch v[9:] {
-					case "H", "h":
-						priority = 4
-					case "M", "m":
-						priority = 3
-					case "L", "l":
-						priority = 1
-					default:
-						priority = 2
-					}
+					taskPriority = priority.GetIndex(strings.ToUpper(v[9:]))
 				} else {
 					// everything else is the task description
 					if len(desc) > 0 {

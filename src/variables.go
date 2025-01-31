@@ -1,6 +1,10 @@
 package main
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"github.com/wbabcock/TaskNinja/src/internals/priority"
+)
 
 const (
 	version = "0.9.0"
@@ -11,7 +15,7 @@ var (
 	desc           string
 	proj           string = ""
 	projPassed     bool   = false
-	priority       uint64 = 0
+	taskPriority   priority.Priority
 	id             uint64
 	tagsAdd        []string     = []string{}
 	tagsRemove     []string     = []string{}

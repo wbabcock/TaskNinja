@@ -62,8 +62,8 @@ func main() {
 			task.Project = utils.ToNullString(proj)
 		}
 
-		if priority > 0 {
-			task.Priority = priority
+		if taskPriority > 0 {
+			task.Priority = taskPriority
 		}
 		task.Update()
 	case "complete", "done":
@@ -151,7 +151,7 @@ func listTasks() {
 			fmt.Sprintf("%d", t.Id),
 			t.Project.String,
 			t.Description,
-			getPriorityValue(t.Priority),
+			t.Priority.String(),
 			t.CreatedDTM.Format("01/02/2006"),
 			due,
 			comp,

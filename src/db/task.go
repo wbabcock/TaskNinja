@@ -4,13 +4,15 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+
+	"github.com/wbabcock/TaskNinja/src/internals/priority"
 )
 
 type Task struct {
 	Id           uint64
 	Description  string
 	Project      sql.NullString
-	Priority     uint64
+	Priority     priority.Priority
 	CreatedDTM   time.Time
 	DueDTM       sql.NullTime
 	CompletedDTM sql.NullTime

@@ -6,17 +6,18 @@ import (
 	"time"
 
 	"github.com/wbabcock/TaskNinja/src/db"
+	"github.com/wbabcock/TaskNinja/src/internals/priority"
 	"github.com/wbabcock/TaskNinja/src/utils"
 )
 
 func createTask() (db.Task, error) {
-	if priority == 0 {
-		priority = 2 // default value
+	if taskPriority == 0 {
+		taskPriority = priority.Normal // default value
 	}
 	task := db.Task{
 		Description:  desc,
 		Project:      utils.ToNullString(proj),
-		Priority:     priority,
+		Priority:     taskPriority,
 		DueDTM:       dueDate,
 		CreatedDTM:   time.Now(),
 		CompletedDTM: doneDate,
@@ -58,8 +59,8 @@ func updateTask(taskId uint64) (db.Task, error) {
 		task.Project = utils.ToNullString(proj)
 	}
 
-	if priority > 0 {
-		task.Priority = priority
+	if taskPriority > 0 {
+		task.Priority = taskPriority
 	}
 
 	err = task.Update()

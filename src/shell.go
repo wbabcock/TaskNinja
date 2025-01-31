@@ -12,6 +12,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/wbabcock/TaskNinja/src/db"
+	"github.com/wbabcock/TaskNinja/src/internals/priority"
 )
 
 var (
@@ -128,7 +129,7 @@ func loadTable() {
 				SetTextColor(colorMain).
 				SetAlign(tview.AlignLeft))
 		table.SetCell(row+1, 3,
-			tview.NewTableCell(getPriorityValue(task.Priority)).
+			tview.NewTableCell(task.Priority.String()).
 				SetTextColor(colorMain).
 				SetAlign(tview.AlignCenter))
 		table.SetCell(row+1, 4,
@@ -173,14 +174,14 @@ func loadFormDetails(table *tview.Table) {
 	id, _ = strconv.ParseUint(table.GetCell(currentRow, 0).Text, 10, 64)
 	proj = table.GetCell(currentRow, 1).Text
 	desc = table.GetCell(currentRow, 2).Text
-	priority = uint64(getPriorityIndex(table.GetCell(currentRow, 3).Text))
+	taskPriority = priority.GetIndex(table.GetCell(currentRow, 3).Text)
 
 	tagsRemove = strings.Split(strings.ReplaceAll(strings.ReplaceAll(table.GetCell(currentRow, 7).Text, ", ", ","), " ", "_"), ",")
 
 	txtID.SetText(fmt.Sprintf("%d", id))
 	txtProject.SetText(proj)
 	txtDescription.SetText(desc, true)
-	cboPriority.SetCurrentOption(int(priority) - 1)
+	cboPriority.SetCurrentOption(int(taskPriority) - 1)
 
 	txtCreated.SetText(table.GetCell(currentRow, 4).Text)
 
@@ -224,7 +225,7 @@ func loadShell() {
 			projPassed = true
 			desc = txtDescription.GetText()
 			p, _ := cboPriority.GetCurrentOption()
-			priority = uint64(p + 1)
+			taskPriority = priority.New(uint8(p + 1))
 			tagsAdd = strings.Split(strings.ReplaceAll(strings.ReplaceAll(txtTags.GetText(), ", ", ","), " ", "_"), ",")
 
 			if txtDue.GetText() == "" {
@@ -232,7 +233,7 @@ func loadShell() {
 				dueDate = sql.NullTime{}
 			} else {
 				parsedDate, err := parseDate(txtDue.GetText())
-				if  err != nil {
+				if err != nil {
 					msgbox("ERROR: " + err.Error())
 					dueDatePassed = false
 				}
